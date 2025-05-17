@@ -1,0 +1,9 @@
+producto_padre,componente,cantidad,costo_unitario_usd,proveedor,nivel,subtotal
+DroneX-100,Frame,1,50,DroneParts Inc.,0,50
+DroneX-100,Control System,1,120,FlyHigh Ltd.,0,120
+DroneX-100,Propulsion Unit,4,35,SpinMotors,0,140
+Control System,Microcontroller,1,25,MicroCore,1,25
+Control System,IMU Sensor,1,10,SenseIT,1,10
+Control System,GPS Module,1,20,NavChip,1,20
+Propulsion Unit,Brushless Motor,1,15,SpinMotors,1,15
+Propulsion Unit,ESC,1,10,SpinMotors,1,10
