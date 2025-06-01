@@ -1,44 +1,88 @@
 # bom_analysis_droneX100
-# 📊 BOM Analysis – DroneX-100
+# 📊 Análisis MRP de Proyecto Fotovoltaico en Media Tensión
+📌 Descripción General
+Este proyecto realiza un análisis de planificación de requerimientos de materiales (MRP) para un sistema fotovoltaico de media tensión. A partir de una base de datos que incluye componentes eléctricos, electrónicos, estructurales y civiles, se identifican cuellos de botella, costos críticos y sincronización de compras para una instalación eficiente.
 
-Este proyecto presenta un análisis de datos sobre la Bill of Materials (BOM) del producto **DroneX-100**, un dron ensamblado con múltiples subcomponentes. El objetivo es identificar el costo total del producto, analizar la jerarquía de componentes y evaluar la dependencia de proveedores clave.
-
----
-
-## 🧾 Contenido
-
-- `bom_drone.csv`: Archivo CSV con datos hipotéticos del BOM (producto padre, componentes, costos, niveles, proveedores).
-- `bom_analysis_droneX100.ipynb`: Notebook de Jupyter que realiza el análisis exploratorio de datos (EDA) del BOM.
-
----
-
-## 📦 Estructura del BOM
-
-El dron contiene una lista jerárquica de componentes (multinivel), como:
-- **Nivel 0**: DroneX-100
-- **Nivel 1**: Control System, Propulsion Unit, Frame
-- **Nivel 2**: Microcontrolador, Sensores, Motores, ESCs, etc.
-
----
-
-## 📈 Análisis Realizado
-
-1. **Carga y visualización de datos**
-2. **Cálculo del costo total del producto**
-3. **Identificación de componentes más costosos**
-4. **Visualización de la jerarquía de ensamble** mediante `networkx`
-5. **Análisis de proveedores** (concentración de costos)
-
----
-
-## 🖥️ Cómo ejecutar
-
-1. Clona el repositorio o descarga los archivos `CSV` y `IPYNB`.
-2. Abre el archivo `bom_analysis_droneX100.ipynb` en:
-   - Jupyter Notebook
-   - JupyterLab
-   - Google Colab (recomendado)
-
-> 📌 Asegúrate de tener instaladas las siguientes bibliotecas:
+📂 Estructura del Proyecto
 ```bash
-pip install pandas matplotlib networkx
+📁 MRP-Fotovoltaico/
+├── data/
+│   └── inventario_componentes.csv   # Datos base de componentes
+├── src/
+│   └── analisis_mrp.py              # Código de análisis y generación de gráficas
+├── output/
+│   └── graficas/                    # Gráficas generadas en el análisis
+├── README.md                        # Este archivo
+│   
+└── PaletaDeColores                 # Colores utilizados en las graficas
+```
+
+# ⚙️ Tecnologías utilizadas
+Python 3.x
+
+Pandas
+
+Matplotlib
+
+Seaborn (opcional)
+
+Jupyter Notebook (opcional para exploración interactiva)
+
+# 📈 Análisis realizado
+Clasificación de componentes por nivel del sistema (de generación a obras civiles).
+
+Cálculo de costos totales por nivel.
+
+Identificación de componentes críticos con baja disponibilidad.
+
+Visualización de:
+
+Distribución de costos por sistema.
+
+Componentes con mayor peso económico.
+
+Tiempo de entrega promedio por proveedor.
+
+Detección de riesgos logísticos por tiempos de espera y sincronización.
+
+# 📊 Gráficas generadas
+Pie chart de distribución de costos por sistema.
+
+Bar plot de inventario disponible vs requerido.
+
+Heatmap de niveles y tiempos de espera.
+
+# 📥 Instalación
+```bash
+git clone https://github.com/tu_usuario/MRP-Fotovoltaico.git
+cd MRP-Fotovoltaico
+pip install -r requirements.txt
+```
+
+# 🚀 Ejecución
+Puedes correr el análisis desde el script principal:
+
+```bash
+python src/analisis_mrp.py
+O explorar los datos desde un notebook Jupyter si prefieres:
+```
+```bash
+jupyter notebook
+```
+# 📚 Datos de entrada
+El archivo inventario_componentes.csv contiene las siguientes columnas clave:
+
+Código, Descripción, Componentes
+
+Disponibilidad, Costo unitario, Proveedor
+
+Tiempo de espera (semanas), Nivel, Tamaño del lote, Recepciones, Subtotal
+
+# ✅ Requerimientos
+nginx
+Copiar
+Editar
+pandas
+matplotlib
+seaborn
+
