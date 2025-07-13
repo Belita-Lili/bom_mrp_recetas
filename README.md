@@ -1,88 +1,85 @@
-# bom_analysis_droneX100
-# 📊 Análisis MRP de Proyecto Fotovoltaico en Media Tensión
-📌 Descripción General
-Este proyecto realiza un análisis de planificación de requerimientos de materiales (MRP) para un sistema fotovoltaico de media tensión. A partir de una base de datos que incluye componentes eléctricos, electrónicos, estructurales y civiles, se identifican cuellos de botella, costos críticos y sincronización de compras para una instalación eficiente.
+# bom_mrp_recetas
+<img width="1599" height="764" alt="image" src="https://github.com/user-attachments/assets/29514e65-7012-401c-9f0a-0a380c416423" />
 
-📂 Estructura del Proyecto
-```bash
-📁 MRP-Fotovoltaico/
-├── data/
-│   └── inventario_componentes.csv   # Datos base de componentes
-├── src/
-│   └── analisis_mrp.py              # Código de análisis y generación de gráficas
-├── output/
-│   └── graficas/                    # Gráficas generadas en el análisis
-├── README.md                        # Este archivo
-│   
-└── PaletaDeColores                 # Colores utilizados en las graficas
+# 📊 Dashboard de Despensa - BOM y MRP
+## 📌 Descripción General
+Un sistema completo para gestionar recetas, inventario y listas de compras basado en los conceptos de BOM (Bill of Materials) y MRP (Material Requirements Planning).
+
+## 🌟 Características Principales
+Gestión de recetas con todos sus ingredientes
+
+Control de alacena e inventario actual
+
+Cálculo automático de necesidades de compra (MRP)
+
+Priorización inteligente de ingredientes
+
+Generación de PDF de la lista de compras
+
+Gráficos interactivos para visualización de datos
+
+Persistencia de datos en el navegador
+
+## 📊 Diagramas Mermaid
+Diagrama de Arquitectura del Sistema
+```mermaid
+graph TD
+    A[Interfaz de Usuario] --> B[Gestor de Recetas]
+    A --> C[Gestor de Alacena]
+    B --> D[(LocalStorage)]
+    C --> D
+    B --> E[Calculador MRP]
+    C --> E
+    E --> F[Generador de PDF]
+    E --> G[Visualizador de Gráficos]
 ```
 
-# ⚙️ Tecnologías utilizadas
-Python 3.x
-
-Pandas
-
-Matplotlib
-
-Seaborn (opcional)
-
-Jupyter Notebook (opcional para exploración interactiva)
-
-# 📈 Análisis realizado
-Clasificación de componentes por nivel del sistema (de generación a obras civiles).
-
-Cálculo de costos totales por nivel.
-
-Identificación de componentes críticos con baja disponibilidad.
-
-Visualización de:
-
-Distribución de costos por sistema.
-
-Componentes con mayor peso económico.
-
-Tiempo de entrega promedio por proveedor.
-
-Detección de riesgos logísticos por tiempos de espera y sincronización.
-
-# 📊 Gráficas generadas
-Pie chart de distribución de costos por sistema.
-
-Bar plot de inventario disponible vs requerido.
-
-Heatmap de niveles y tiempos de espera.
-
-# 📥 Instalación
-```bash
-git clone https://github.com/tu_usuario/MRP-Fotovoltaico.git
-cd MRP-Fotovoltaico
-pip install -r requirements.txt
+Flujo de Datos BOM/MRP
+```mermaid
+flowchart LR
+    Recetas --> BOM[Lista de Materiales]
+    Alacena[Inventario Alacena] --> MRP
+    BOM --> MRP[Cálculo de Necesidades]
+    MRP --> ListaCompras
+    MRP --> Reportes
 ```
 
-# 🚀 Ejecución
-Puedes correr el análisis desde el script principal:
+Diagrama de Secuencia - Generación de Lista de Compras
+```mermaid
+sequenceDiagram
+    Usuario->>+Sistema: Solicita lista de compras
+    Sistema->>+Recetas: Obtener todas las recetas
+    Sistema->>+Alacena: Obtener inventario
+    Sistema->>Sistema: Calcular necesidades (MRP)
+    Sistema->>Usuario: Mostrar lista de compras
+    Usuario->>+Sistema: Solicita PDF
+    Sistema->>Sistema: Generar PDF
+    Sistema->>Usuario: Descargar PDF
+ ```   
+## 🛠️ Tecnologías Utilizadas
+Frontend: HTML5, CSS3, JavaScript
 
+Bibliotecas: Bootstrap 5, Chart.js, jsPDF
+
+Persistencia: localStorage
+
+Diagramas: Mermaid.js
+
+## 🚀 Cómo Usar
+Agregar recetas en la pestaña correspondiente
+
+Registrar ingredientes disponibles en la alacena
+
+Revisar la pestaña de Compras para ver qué necesitas comprar
+
+Generar PDF con la lista optimizada para ir al mercado
+
+## 📂 Estructura del Proyecto
 ```bash
-python src/analisis_mrp.py
-O explorar los datos desde un notebook Jupyter si prefieres:
+📁 bom_mrp_recetas/
+├── index.html          # Archivo principal con toda la aplicación
+├── image/
+│   └── logo.png/       # Imagen de Flaticon
+└── README.md           # Este archivo
 ```
-```bash
-jupyter notebook
-```
-# 📚 Datos de entrada
-El archivo inventario_componentes.csv contiene las siguientes columnas clave:
-
-Código, Descripción, Componentes
-
-Disponibilidad, Costo unitario, Proveedor
-
-Tiempo de espera (semanas), Nivel, Tamaño del lote, Recepciones, Subtotal
-
-# ✅ Requerimientos
-nginx
-Copiar
-Editar
-pandas
-matplotlib
-seaborn
 
