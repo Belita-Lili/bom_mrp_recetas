@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Despensa - BOM y MRP</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  
+  <!-- Custom CSS -->
+  <style>
+    :root {
+      --color1: #3498db;
+      --color2: #2ecc71;
+      --color3: #e74c3c;
+      --color4: #f39c12;
+      --color5: #9b59b6;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+    }
+    
+    .sidebar {
+      background-color: #343a40;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .card-custom {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-recetas { border-top: 4px solid var(--color1); }
+    .card-ingredientes { border-top: 4px solid var(--color2); }
+    .card-compras { border-top: 4px solid var(--color4); }
+    .card-inventario { border-top: 4px solid var(--color5); }
+    
+    .progress-bar-stock { background-color: var(--color1); }
+    .progress-bar-needed { background-color: var(--color4); }
+    
+    .footer {
+      background-color: #343a40;
+      color: white;
+      text-align: center;
+      padding: 15px 0;
+      margin-top: 20px;
+    }
+    
+    .ingrediente-item {
+      transition: all 0.3s ease;
+    }
+    
+    .ingrediente-item:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .formulario-receta-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1050;
+      display: none;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 50px;
+      overflow-y: auto;
+    }
+    
+    .formulario-receta-content {
+      background: white;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 800px;
+      margin-bottom: 50px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .btn-pdf {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      transition: all 0.3s;
+    }
+    
+    .btn-pdf:hover {
+      background-color: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .list-group-item-action:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .badge-prioridad-alta {
+      background-color: #e74c3c;
+    }
+    
+    .badge-prioridad-media {
+      background-color: #f39c12;
+    }
+    
+    .badge-prioridad-baja {
+      background-color: #2ecc71;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid g-0">
+    <div class="row g-0">
+      <!-- Sidebar Simplificado -->
+      <div class="col-md-2 sidebar">
+        <div class="text-center mb-4">
+          <img src="images/logo.png" alt="Logo Despensa" class="img-fluid mb-2" style="max-height: 60px;">
+          <h4>Despensa Semanal</h4>
+        </div>
+        <hr>
+        <div class="d-grid gap-2">
+          <button class="btn btn-light" onclick="generarListaCompras()">
+            <i class="bi bi-list-check"></i> Ver Lista
+          </button>
+          <button class="btn btn-pdf" onclick="generarPDF()">
+            <i class="bi bi-file-pdf"></i> Descargar PDF
+          </button>
+        </div>
+        <hr>
+        <button class="btn btn-light w-100" data-bs-toggle="modal" data-bs-target="#modalTutorial">
+          <i class="bi bi-question-circle"></i> Tutorial
+        </button>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="col-md-10 p-4 main-content">
+        <h2 class="mb-4">Planificación Semanal de Despensa</h2>
+        
+        <!-- KPI Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card-custom card-recetas">
+              <h5>Recetas Planeadas</h5>
+              <h2 class="display-6" id="kpi-recetas">0</h2>
+              <small class="d-block">Para 7 días</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card-custom card-ingredientes">
+              <h5>Ingredientes Únicos</h5>
+              <h2 class="display-6" id="kpi-ingredientes">0</h2>
+              <small class="d-block">En 5 categorías</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card-custom card-compras">
+              <h5>Items a Comprar</h5>
+              <h2 class="display-6" id="kpi-compras">0</h2>
+              <small class="d-block" id="kpi-compras-prioridad"></small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card-custom card-inventario">
+              <h5>Inventario Actual</h5>
+              <h2 class="display-6" id="kpi-inventario">0%</h2>
+              <small class="d-block" id="kpi-inventario-trend"></small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen" type="button" role="tab">
+              <i class="bi bi-house-door"></i> Resumen
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="recetas-tab" data-bs-toggle="tab" data-bs-target="#recetas" type="button" role="tab">
+              <i class="bi bi-book"></i> Recetas (BOM)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="compras-tab" data-bs-toggle="tab" data-bs-target="#compras" type="button" role="tab">
+              <i class="bi bi-cart"></i> Compras (MRP)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="alacena-tab" data-bs-toggle="tab" data-bs-target="#alacena" type="button" role="tab">
+              <i class="bi bi-box-seam"></i> Alacena
+            </button>
+          </li>
+        </ul>
+        
+        <!-- Tabs Content -->
+        <div class="tab-content" id="mainTabsContent">
+          <!-- Resumen Tab -->
+          <div class="tab-pane fade show active" id="resumen" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card-custom">
+                  <h5 class="card-title">Distribución de Ingredientes por Categoría</h5>
+                  <canvas id="graficoCategorias" height="400"></canvas>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card-custom">
+                  <h5 class="card-title">Calendario de Comidas</h5>
+                  <div class="table-responsive">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Día</th>
+                          <th>Desayuno</th>
+                          <th>Almuerzo</th>
+                          <th>Cena</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tabla-calendario">
+                        <!-- Dinámico -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="card-custom">
+                  <h5 class="card-title">Ingredientes Críticos</h5>
+                  <div id="alertas-ingredientes">
+                    <!-- Dinámico -->
+                  </div>
+                  <div class="progress mt-2">
+                    <div class="progress-bar progress-bar-stock" id="progress-stock" role="progressbar" style="width: 65%"></div>
+                    <div class="progress-bar progress-bar-needed" id="progress-needed" role="progressbar" style="width: 35%"></div>
+                  </div>
+                  <small class="text-muted">Azul: Inventario actual | Amarillo: Necesidad adicional</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card-custom">
+                  <h5 class="card-title">Proveedores Recomendados</h5>
+                  <div class="list-group" id="lista-proveedores">
+                    <!-- Dinámico -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recetas Tab -->
+          <div class="tab-pane fade" id="recetas" role="tabpanel">
+            <button class="btn btn-success mb-4" onclick="mostrarFormularioReceta()">
+              <i class="bi bi-plus-lg"></i> Añadir Nueva Receta
+            </button>
+            
+            <div class="row" id="contenedor-recetas">
+              <!-- Dinámico -->
+            </div>
+          </div>
+          
+          <!-- Compras Tab -->
+          <div class="tab-pane fade" id="compras" role="tabpanel">
+            <div class="card-custom mb-4">
+              <h5>Resumen de Necesidades</h5>
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Ingrediente</th>
+                      <th>Unidad</th>
+                      <th>Necesidad Total</th>
+                      <th>Inventario Actual</th>
+                      <th>Comprar</th>
+                      <th>Costo Unitario</th>
+                      <th>Costo Total</th>
+                      <th>Prioridad</th>
+                      <th>Proveedor</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-compras">
+                    <!-- Dinámico -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card-custom">
+                  <h5>Distribución de Costos</h5>
+                  <canvas id="graficoCostos" height="400"></canvas>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card-custom">
+                  <h5>Lista de Compras Optimizada</h5>
+                  <div class="list-group" id="lista-compras-detalle">
+                    <!-- Dinámico -->
+                  </div>
+                  <div class="d-flex justify-content-between mt-3 p-2 bg-light rounded">
+                    <strong>Total estimado:</strong>
+                    <strong id="total-compras">$0.00</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Alacena Tab -->
+          <div class="tab-pane fade" id="alacena" role="tabpanel">
+            <div class="card-custom mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Inventario Actual</h5>
+                <button class="btn btn-primary" onclick="mostrarFormularioIngrediente()">
+                  <i class="bi bi-plus-lg"></i> Añadir Ingrediente
+                </button>
+              </div>
+              
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Ingrediente</th>
+                      <th>Categoría</th>
+                      <th>Cantidad</th>
+                      <th>Unidad</th>
+                      <th>Costo Unitario</th>
+                      <th>Proveedor</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-alacena">
+                    <!-- Dinámico -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="card-custom">
+              <h5 class="mb-3">Distribución de Alacena</h5>
+              <canvas id="graficoAlacena" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario Flotante para Recetas -->
+  <div id="formulario-receta-container" class="formulario-receta-container">
+    <div class="formulario-receta-content">
+      <div class="modal-header bg-primary text-white">
+        <h2 id="titulo-formulario-receta" class="modal-title">Agregar Nueva Receta</h2>
+        <button type="button" class="btn-close btn-close-white" onclick="ocultarFormularioReceta()"></button>
+      </div>
+      <div class="modal-body">
+        <form id="receta-form">
+          <input type="hidden" id="receta-id">
+          
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <label for="nombre-receta" class="form-label">Nombre de la Receta:</label>
+              <input type="text" class="form-control" id="nombre-receta" required>
+            </div>
+            <div class="col-md-4">
+              <label for="categoria-receta" class="form-label">Categoría:</label>
+              <select class="form-select" id="categoria-receta" required>
+                <option value="Desayuno">Desayuno</option>
+                <option value="Almuerzo">Almuerzo</option>
+                <option value="Cena">Cena</option>
+                <option value="Postre">Postre</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="dificultad-receta" class="form-label">Dificultad:</label>
+              <select class="form-select" id="dificultad-receta" required>
+                <option value="Fácil">Fácil</option>
+                <option value="Medio">Medio</option>
+                <option value="Difícil">Difícil</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="tiempo-receta" class="form-label">Tiempo (minutos):</label>
+              <input type="number" class="form-control" id="tiempo-receta" required min="1">
+            </div>
+            <div class="col-md-4">
+              <label for="porciones-receta" class="form-label">Porciones:</label>
+              <input type="number" class="form-control" id="porciones-receta" min="1" value="4">
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="instrucciones-receta" class="form-label">Instrucciones:</label>
+            <textarea class="form-control" id="instrucciones-receta" rows="4"></textarea>
+          </div>
+          
+          <h4 class="mt-4">Ingredientes</h4>
+          <div id="lista-ingredientes">
+            <!-- Ingredientes se añadirán aquí dinámicamente -->
+          </div>
+          
+          <div class="d-flex justify-content-between mt-3">
+            <button type="button" class="btn btn-secondary" onclick="agregarIngrediente()">
+              <i class="bi bi-plus-circle"></i> Añadir Ingrediente
+            </button>
+            <div>
+              <button type="button" class="btn btn-outline-danger me-2" onclick="ocultarFormularioReceta()">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Guardar Receta
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario Flotante para Ingredientes de Alacena -->
+  <div id="formulario-ingrediente-container" class="formulario-receta-container">
+    <div class="formulario-receta-content" style="max-width: 600px;">
+      <div class="modal-header bg-success text-white">
+        <h2 id="titulo-formulario-ingrediente" class="modal-title">Agregar Ingrediente a Alacena</h2>
+        <button type="button" class="btn-close btn-close-white" onclick="ocultarFormularioIngrediente()"></button>
+      </div>
+      <div class="modal-body">
+        <form id="ingrediente-form">
+          <input type="hidden" id="ingrediente-id">
+          
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <label for="nombre-ingrediente" class="form-label">Nombre del Ingrediente:</label>
+              <input type="text" class="form-control" id="nombre-ingrediente" required>
+            </div>
+            <div class="col-md-4">
+              <label for="categoria-ingrediente" class="form-label">Categoría:</label>
+              <select class="form-select" id="categoria-ingrediente" required>
+                <option value="Lácteos">Lácteos</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Frutas/Verduras">Frutas/Verduras</option>
+                <option value="Granos">Granos</option>
+                <option value="Condimentos">Condimentos</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="cantidad-ingrediente" class="form-label">Cantidad:</label>
+              <input type="number" class="form-control" id="cantidad-ingrediente" required min="0" step="0.01">
+            </div>
+            <div class="col-md-4">
+              <label for="unidad-ingrediente" class="form-label">Unidad:</label>
+              <select class="form-select" id="unidad-ingrediente">
+                <option value="gr">Gramos</option>
+                <option value="kg">Kilogramos</option>
+                <option value="ml">Mililitros</option>
+                <option value="lt">Litros</option>
+                <option value="unidad">Unidad</option>
+                <option value="cucharada">Cucharada</option>
+                <option value="taza">Taza</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="costo-ingrediente" class="form-label">Costo Unitario:</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" id="costo-ingrediente" min="0" step="0.01">
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="proveedor-ingrediente" class="form-label">Proveedor:</label>
+            <input type="text" class="form-control" id="proveedor-ingrediente">
+          </div>
+          
+          <div class="d-flex justify-content-end mt-3">
+            <button type="button" class="btn btn-outline-danger me-2" onclick="ocultarFormularioIngrediente()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-success">
+              Guardar Ingrediente
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Costo -->
+  <div class="modal fade" id="modalEditarCosto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title">Editar Costo de Ingrediente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="form-editar-costo">
+            <input type="hidden" id="editar-costo-id">
+            <div class="mb-3">
+              <label for="editar-costo-nombre" class="form-label">Ingrediente:</label>
+              <input type="text" class="form-control" id="editar-costo-nombre" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="editar-costo-valor" class="form-label">Nuevo Costo Unitario:</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" id="editar-costo-valor" min="0" step="0.01" required>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end">
+              <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-warning">Actualizar Costo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tutorial -->
+  <div class="modal fade" id="modalTutorial" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Tutorial: BOM y MRP para Despensa</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h4>¿Qué es BOM (Bill of Materials)?</h4>
+          <p>Es la lista completa de todos los ingredientes necesarios para tus recetas, con las cantidades exactas.</p>
+          
+          <h4 class="mt-4">¿Qué es MRP (Material Requirements Planning)?</h4>
+          <p>Es el cálculo de qué necesitas comprar, considerando lo que ya tienes en tu inventario.</p>
+          
+          <h4 class="mt-4">Cómo usar este sistema:</h4>
+          <ol>
+            <li>Añade tus recetas con todos sus ingredientes</li>
+            <li>Actualiza tu inventario actual en la pestaña Alacena</li>
+            <li>Edita los costos de los ingredientes cuando cambien</li>
+            <li>Revisa la lista de compras generada automáticamente</li>
+            <li>Descarga la lista optimizada en PDF cuando vayas al mercado</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <span class="text-muted">Dashboard de Despensa - BOM y MRP &copy; 2023</span>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  
+  <!-- Custom JS -->
+  <script>
+    // Variables globales
+    let recetas = [];
+    let ingredientesAlacena = [];
+    let categoriasIngredientes = ['Lácteos', 'Carnes', 'Frutas/Verduras', 'Granos', 'Condimentos', 'Otros'];
+    let unidades = ['gr', 'kg', 'ml', 'lt', 'unidad', 'cucharada', 'taza'];
+    
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+      cargarDatos();
+      inicializarGraficos();
+      actualizarUI();
+      
+      // Configurar tooltips de Bootstrap
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+    
+    // Cargar datos desde localStorage
+    function cargarDatos() {
+      recetas = JSON.parse(localStorage.getItem('recetas')) || [];
+      ingredientesAlacena = JSON.parse(localStorage.getItem('ingredientesAlacena')) || [];
+    }
+    
+    // Guardar datos en localStorage
+    function guardarDatos() {
+      localStorage.setItem('recetas', JSON.stringify(recetas));
+      localStorage.setItem('ingredientesAlacena', JSON.stringify(ingredientesAlacena));
+    }
+    
+    // Inicializar gráficos
+    function inicializarGraficos() {
+      // Gráfico de categorías (circular)
+      const ctxCategorias = document.getElementById('graficoCategorias').getContext('2d');
+      window.graficoCategorias = new Chart(ctxCategorias, {
+        type: 'pie',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: [
+              'rgba(54, 162, 235, 0.7)',
+              'rgba(75, 192, 192, 0.7)',
+              'rgba(255, 99, 132, 0.7)',
+              'rgba(255, 159, 64, 0.7)',
+              'rgba(153, 102, 255, 0.7)',
+              'rgba(201, 203, 207, 0.7)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // Gráfico de costos
+      const ctxCostos = document.getElementById('graficoCostos').getContext('2d');
+      window.graficoCostos = new Chart(ctxCostos, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Costo por Categoría',
+            data: [],
+            backgroundColor: 'rgba(255, 159, 64, 0.7)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+      // Gráfico de alacena
+      const ctxAlacena = document.getElementById('graficoAlacena').getContext('2d');
+      window.graficoAlacena = new Chart(ctxAlacena, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: [
+              'rgba(54, 162, 235, 0.7)',
+              'rgba(75, 192, 192, 0.7)',
+              'rgba(255, 99, 132, 0.7)',
+              'rgba(255, 159, 64, 0.7)',
+              'rgba(153, 102, 255, 0.7)',
+              'rgba(201, 203, 207, 0.7)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+            }
+          }
+        }
+      });
+    }
+    
+    // Actualizar toda la UI
+    function actualizarUI() {
+      actualizarKPIs();
+      actualizarTablaCalendario();
+      actualizarContenedorRecetas();
+      actualizarTablaCompras();
+      actualizarTablaAlacena();
+      actualizarGraficos();
+    }
+    
+    // Actualizar KPIs
+    function actualizarKPIs() {
+      document.getElementById('kpi-recetas').textContent = recetas.length;
+      
+      const ingredientesUnicos = new Set();
+      recetas.forEach(receta => {
+        receta.ingredientes.forEach(ing => ingredientesUnicos.add(ing.nombre));
+      });
+      document.getElementById('kpi-ingredientes').textContent = ingredientesUnicos.size;
+      
+      // Calcular items a comprar (simplificado)
+      const itemsComprar = calcularItemsComprar().length;
+      document.getElementById('kpi-compras').textContent = itemsComprar;
+      
+      // Mostrar prioridad más alta en el KPI
+      const prioridades = calcularItemsComprar().map(item => item.prioridad);
+      const prioridadTexto = prioridades.includes('Alta') ? 'Alta prioridad' : 
+                           prioridades.includes('Media') ? 'Media prioridad' : 'Baja prioridad';
+      document.getElementById('kpi-compras-prioridad').textContent = prioridadTexto;
+      
+      // Inventario (porcentaje de ingredientes que ya tenemos)
+      const totalIngredientes = ingredientesUnicos.size;
+      const enAlacena = [...ingredientesUnicos].filter(ing => 
+        ingredientesAlacena.some(item => item.nombre === ing)
+      ).length;
+      const porcentajeInventario = totalIngredientes > 0 ? 
+        Math.round((enAlacena / totalIngredientes) * 100) : 0;
+      
+      document.getElementById('kpi-inventario').textContent = `${porcentajeInventario}%`;
+      
+      // Tendencia (simplificado)
+      const trend = document.getElementById('kpi-inventario-trend');
+      if (porcentajeInventario > 70) {
+        trend.innerHTML = '<i class="bi bi-arrow-up-circle-fill text-success"></i> Buen nivel';
+      } else if (porcentajeInventario > 30) {
+        trend.innerHTML = '<i class="bi bi-dash-circle-fill text-warning"></i> Nivel medio';
+      } else {
+        trend.innerHTML = '<i class="bi bi-arrow-down-circle-fill text-danger"></i> Nivel bajo';
+      }
+    }
+    
+    // Actualizar tabla de calendario
+    function actualizarTablaCalendario() {
+      const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const tbody = document.getElementById('tabla-calendario');
+      tbody.innerHTML = '';
+      
+      dias.forEach(dia => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${dia}</strong></td>
+          <td>${obtenerRecetaAleatoria('Desayuno')}</td>
+          <td>${obtenerRecetaAleatoria('Almuerzo')}</td>
+          <td>${obtenerRecetaAleatoria('Cena')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Obtener receta aleatoria por categoría
+    function obtenerRecetaAleatoria(categoria) {
+      const recetasFiltradas = recetas.filter(r => r.categoria === categoria);
+      if (recetasFiltradas.length === 0) return '-';
+      const randomIndex = Math.floor(Math.random() * recetasFiltradas.length);
+      return recetasFiltradas[randomIndex].nombre;
+    }
+    
+    // Actualizar contenedor de recetas
+    function actualizarContenedorRecetas() {
+      const contenedor = document.getElementById('contenedor-recetas');
+      contenedor.innerHTML = '';
+      
+      recetas.forEach((receta, index) => {
+        const card = document.createElement('div');
+        card.className = 'col-md-4 mb-4';
+        card.innerHTML = `
+          <div class="card h-100">
+            <div class="card-header bg-light">
+              <h5 class="card-title mb-0">${receta.nombre}</h5>
+            </div>
+            <div class="card-body">
+              <p class="card-text"><strong>Categoría:</strong> ${receta.categoria}</p>
+              <p class="card-text"><strong>Dificultad:</strong> ${receta.dificultad}</p>
+              <p class="card-text"><strong>Tiempo:</strong> ${receta.tiempo} min</p>
+              <p class="card-text"><strong>Porciones:</strong> ${receta.porciones}</p>
+              <h6 class="mt-3">Ingredientes:</h6>
+              <ul class="list-unstyled">
+                ${receta.ingredientes.map(ing => 
+                  `<li>${ing.cantidad} ${ing.unidad} de ${ing.nombre}</li>`
+                ).join('')}
+              </ul>
+            </div>
+            <div class="card-footer bg-transparent">
+              <button class="btn btn-sm btn-outline-primary me-2" onclick="editarReceta(${index})">
+                <i class="bi bi-pencil"></i> Editar
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="eliminarReceta(${index})">
+                <i class="bi bi-trash"></i> Eliminar
+              </button>
+            </div>
+          </div>
+        `;
+        contenedor.appendChild(card);
+      });
+    }
+    
+    // Actualizar tabla de compras (MRP)
+    function actualizarTablaCompras() {
+      const itemsComprar = calcularItemsComprar();
+      const tbody = document.getElementById('tabla-compras');
+      tbody.innerHTML = '';
+      
+      let totalCompras = 0;
+      
+      itemsComprar.forEach(item => {
+        const costoTotal = item.comprar * (item.costoUnitario || 0);
+        totalCompras += costoTotal;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.nombre}</td>
+          <td>${item.unidad}</td>
+          <td>${item.necesidadTotal}</td>
+          <td>${item.inventarioActual}</td>
+          <td>${item.comprar}</td>
+          <td>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control form-control-sm costo-unitario" 
+                     value="${item.costoUnitario || 0}" min="0" step="0.01"
+                     data-ingrediente="${item.nombre}"
+                     onchange="actualizarCostoIngrediente('${item.nombre}', this.value)">
+            </div>
+          </td>
+          <td>$${costoTotal.toFixed(2)}</td>
+          <td>
+            <span class="badge ${item.prioridad === 'Alta' ? 'bg-danger' : 
+                              item.prioridad === 'Media' ? 'bg-warning' : 'bg-success'}">
+              ${item.prioridad}
+            </span>
+          </td>
+          <td>${item.proveedor || '-'}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning" 
+                    onclick="mostrarModalEditarCosto('${item.nombre}', ${item.costoUnitario || 0})"
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="Editar costo">
+              <i class="bi bi-cash-coin"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      document.getElementById('total-compras').textContent = `$${totalCompras.toFixed(2)}`;
+      
+      // Actualizar lista de compras detalle
+      const listaCompras = document.getElementById('lista-compras-detalle');
+      listaCompras.innerHTML = '';
+      
+      itemsComprar.forEach(item => {
+        const li = document.createElement('a');
+        li.className = 'list-group-item list-group-item-action';
+        li.innerHTML = `
+          <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1">${item.nombre}</h6>
+            <small class="text-muted">${item.prioridad}</small>
+          </div>
+          <p class="mb-1">Comprar: ${item.comprar} ${item.unidad}</p>
+          <small class="text-muted">$${(item.costoUnitario || 0).toFixed(2)} c/u</small>
+        `;
+        listaCompras.appendChild(li);
+      });
+      
+      // Actualizar gráfico de costos
+      actualizarGraficoCostos(itemsComprar);
+    }
+    
+    // Calcular items a comprar (MRP)
+    function calcularItemsComprar() {
+      // Agrupar ingredientes de todas las recetas
+      const ingredientesRecetas = {};
+      
+      recetas.forEach(receta => {
+        receta.ingredientes.forEach(ing => {
+          if (!ingredientesRecetas[ing.nombre]) {
+            ingredientesRecetas[ing.nombre] = {
+              nombre: ing.nombre,
+              unidad: ing.unidad,
+              cantidadTotal: 0,
+              inventario: 0,
+              costoUnitario: 0,
+              proveedor: ''
+            };
+          }
+          ingredientesRecetas[ing.nombre].cantidadTotal += ing.cantidad;
+        });
+      });
+      
+      // Verificar inventario
+      ingredientesAlacena.forEach(item => {
+        if (ingredientesRecetas[item.nombre]) {
+          ingredientesRecetas[item.nombre].inventario = item.cantidad;
+          ingredientesRecetas[item.nombre].costoUnitario = item.costo || 0;
+          ingredientesRecetas[item.nombre].proveedor = item.proveedor || '';
+        }
+      });
+      
+      // Calcular qué comprar
+      const itemsComprar = Object.values(ingredientesRecetas).map(item => {
+        const comprar = Math.max(0, item.cantidadTotal - item.inventario);
+        
+        // Determinar prioridad
+        let prioridad = 'Baja';
+        if (comprar > item.cantidadTotal * 0.7) prioridad = 'Alta';
+        else if (comprar > item.cantidadTotal * 0.3) prioridad = 'Media';
+        
+        return {
+          ...item,
+          necesidadTotal: item.cantidadTotal,
+          inventarioActual: item.inventario,
+          comprar: comprar,
+          prioridad: prioridad
+        };
+      }).filter(item => item.comprar > 0);
+      
+      return itemsComprar;
+    }
+    
+    // Actualizar gráfico de costos
+    function actualizarGraficoCostos(itemsComprar) {
+      // Agrupar por categoría (simplificado)
+      const costosPorCategoria = {};
+      
+      itemsComprar.forEach(item => {
+        const categoria = determinarCategoriaIngrediente(item.nombre);
+        if (!costosPorCategoria[categoria]) {
+          costosPorCategoria[categoria] = 0;
+        }
+        costosPorCategoria[categoria] += item.comprar * (item.costoUnitario || 0);
+      });
+      
+      // Actualizar gráfico
+      window.graficoCostos.data.labels = Object.keys(costosPorCategoria);
+      window.graficoCostos.data.datasets[0].data = Object.values(costosPorCategoria);
+      window.graficoCostos.update();
+    }
+    
+    // Determinar categoría de ingrediente (simplificado)
+    function determinarCategoriaIngrediente(nombre) {
+      const nombreLower = nombre.toLowerCase();
+      
+      if (nombreLower.includes('leche') || nombreLower.includes('queso') || nombreLower.includes('yogur')) {
+        return 'Lácteos';
+      }
+      if (nombreLower.includes('pollo') || nombreLower.includes('carne') || nombreLower.includes('pescado')) {
+        return 'Carnes';
+      }
+      if (nombreLower.includes('manzana') || nombreLower.includes('zanahoria') || nombreLower.includes('cebolla')) {
+        return 'Frutas/Verduras';
+      }
+      if (nombreLower.includes('arroz') || nombreLower.includes('pasta') || nombreLower.includes('harina')) {
+        return 'Granos';
+      }
+      if (nombreLower.includes('sal') || nombreLower.includes('azúcar') || nombreLower.includes('especia')) {
+        return 'Condimentos';
+      }
+      return 'Otros';
+    }
+    
+    // Actualizar tabla de alacena
+    function actualizarTablaAlacena() {
+      const tbody = document.getElementById('tabla-alacena');
+      tbody.innerHTML = '';
+      
+      ingredientesAlacena.forEach((ingrediente, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${ingrediente.nombre}</td>
+          <td>${ingrediente.categoria || 'Otros'}</td>
+          <td>${ingrediente.cantidad}</td>
+          <td>${ingrediente.unidad}</td>
+          <td>$${(ingrediente.costo || 0).toFixed(2)}</td>
+          <td>${ingrediente.proveedor || '-'}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="editarIngrediente(${index})"
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="eliminarIngrediente(${index})"
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="Eliminar">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      // Actualizar gráfico de alacena
+      actualizarGraficoAlacena();
+    }
+    
+    // Actualizar gráfico de alacena
+    function actualizarGraficoAlacena() {
+      // Agrupar por categoría
+      const categorias = {};
+      
+      ingredientesAlacena.forEach(item => {
+        const categoria = item.categoria || 'Otros';
+        if (!categorias[categoria]) {
+          categorias[categoria] = 0;
+        }
+        categorias[categoria] += 1; // Contamos cantidad de items por categoría
+      });
+      
+      // Si no hay datos, mostramos un mensaje
+      if (Object.keys(categorias).length === 0) {
+        categorias['No hay datos'] = 1;
+      }
+      
+      // Actualizar gráfico
+      window.graficoAlacena.data.labels = Object.keys(categorias);
+      window.graficoAlacena.data.datasets[0].data = Object.values(categorias);
+      window.graficoAlacena.update();
+    }
+    
+    // Actualizar gráficos principales
+    function actualizarGraficos() {
+      // Actualizar gráfico de categorías de ingredientes
+      const ingredientesPorCategoria = {};
+      
+      recetas.forEach(receta => {
+        receta.ingredientes.forEach(ing => {
+          const categoria = determinarCategoriaIngrediente(ing.nombre);
+          if (!ingredientesPorCategoria[categoria]) {
+            ingredientesPorCategoria[categoria] = 0;
+          }
+          ingredientesPorCategoria[categoria] += ing.cantidad;
+        });
+      });
+      
+      window.graficoCategorias.data.labels = Object.keys(ingredientesPorCategoria);
+      window.graficoCategorias.data.datasets[0].data = Object.values(ingredientesPorCategoria);
+      window.graficoCategorias.update();
+    }
+    
+    // Mostrar formulario de receta
+    function mostrarFormularioReceta(recetaIndex = null) {
+      const formulario = document.getElementById('formulario-receta-container');
+      const titulo = document.getElementById('titulo-formulario-receta');
+      const form = document.getElementById('receta-form');
+      
+      if (recetaIndex !== null) {
+        // Modo edición
+        titulo.textContent = 'Editar Receta';
+        const receta = recetas[recetaIndex];
+        
+        document.getElementById('receta-id').value = recetaIndex;
+        document.getElementById('nombre-receta').value = receta.nombre;
+        document.getElementById('categoria-receta').value = receta.categoria;
+        document.getElementById('dificultad-receta').value = receta.dificultad;
+        document.getElementById('tiempo-receta').value = receta.tiempo;
+        document.getElementById('porciones-receta').value = receta.porciones;
+        document.getElementById('instrucciones-receta').value = receta.instrucciones || '';
+        
+        // Limpiar lista de ingredientes
+        const listaIngredientes = document.getElementById('lista-ingredientes');
+        listaIngredientes.innerHTML = '';
+        
+        // Añadir ingredientes
+        receta.ingredientes.forEach((ingrediente, index) => {
+          agregarCampoIngrediente(
+            ingrediente.nombre, 
+            ingrediente.cantidad, 
+            ingrediente.unidad,
+            index
+          );
+        });
+      } else {
+        // Modo nuevo
+        titulo.textContent = 'Agregar Nueva Receta';
+        form.reset();
+        document.getElementById('receta-id').value = '';
+        
+        // Limpiar lista de ingredientes
+        const listaIngredientes = document.getElementById('lista-ingredientes');
+        listaIngredientes.innerHTML = '';
+        
+        // Añadir un ingrediente por defecto
+        agregarIngrediente();
+      }
+      
+      formulario.style.display = 'flex';
+    }
+    
+    // Ocultar formulario de receta
+    function ocultarFormularioReceta() {
+      document.getElementById('formulario-receta-container').style.display = 'none';
+    }
+    
+    // Agregar campo de ingrediente al formulario
+    function agregarIngrediente() {
+      const listaIngredientes = document.getElementById('lista-ingredientes');
+      const index = listaIngredientes.children.length;
+      agregarCampoIngrediente('', 0, 'gr', index);
+    }
+    
+    // Agregar campo de ingrediente (implementación)
+    function agregarCampoIngrediente(nombre, cantidad, unidad, index) {
+      const listaIngredientes = document.getElementById('lista-ingredientes');
+      
+      const div = document.createElement('div');
+      div.className = 'row g-3 mb-3 ingrediente-item align-items-center';
+      div.dataset.index = index;
+      div.innerHTML = `
+        <div class="col-md-5">
+          <input type="text" class="form-control nombre-ingrediente" placeholder="Nombre" value="${nombre}" required>
+        </div>
+        <div class="col-md-2">
+          <input type="number" class="form-control cantidad-ingrediente" placeholder="Cantidad" value="${cantidad}" min="0" step="0.01" required>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select unidad-ingrediente">
+            ${unidades.map(u => `<option value="${u}" ${u === unidad ? 'selected' : ''}>${u}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-outline-danger w-100" onclick="eliminarCampoIngrediente(${index})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      `;
+      
+      listaIngredientes.appendChild(div);
+    }
+    
+    // Eliminar campo de ingrediente
+    function eliminarCampoIngrediente(index) {
+      const item = document.querySelector(`.ingrediente-item[data-index="${index}"]`);
+      if (item) item.remove();
+      
+      // Reindexar los elementos restantes
+      const items = document.querySelectorAll('.ingrediente-item');
+      items.forEach((item, i) => {
+        item.dataset.index = i;
+      });
+    }
+    
+    // Manejar envío del formulario de receta
+    document.getElementById('receta-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const recetaId = document.getElementById('receta-id').value;
+      const nombre = document.getElementById('nombre-receta').value;
+      const categoria = document.getElementById('categoria-receta').value;
+      const dificultad = document.getElementById('dificultad-receta').value;
+      const tiempo = document.getElementById('tiempo-receta').value;
+      const porciones = document.getElementById('porciones-receta').value;
+      const instrucciones = document.getElementById('instrucciones-receta').value;
+      
+      // Obtener ingredientes
+      const ingredientes = [];
+      const items = document.querySelectorAll('.ingrediente-item');
+      
+      items.forEach(item => {
+        const nombreIng = item.querySelector('.nombre-ingrediente').value;
+        const cantidad = parseFloat(item.querySelector('.cantidad-ingrediente').value);
+        const unidad = item.querySelector('.unidad-ingrediente').value;
+        
+        if (nombreIng && !isNaN(cantidad) && cantidad > 0) {
+          ingredientes.push({
+            nombre: nombreIng,
+            cantidad: cantidad,
+            unidad: unidad
+          });
+        }
+      });
+      
+      if (ingredientes.length === 0) {
+        alert('Debe agregar al menos un ingrediente válido');
+        return;
+      }
+      
+      // Crear objeto receta
+      const receta = {
+        nombre,
+        categoria,
+        dificultad,
+        tiempo: parseInt(tiempo),
+        porciones: parseInt(porciones),
+        instrucciones,
+        ingredientes
+      };
+      
+      if (recetaId === '') {
+        // Nueva receta
+        recetas.push(receta);
+      } else {
+        // Editar receta existente
+        recetas[parseInt(recetaId)] = receta;
+      }
+      
+      guardarDatos();
+      actualizarUI();
+      ocultarFormularioReceta();
+    });
+    
+    // Editar receta
+    function editarReceta(index) {
+      mostrarFormularioReceta(index);
+    }
+    
+    // Eliminar receta
+    function eliminarReceta(index) {
+      if (confirm('¿Estás seguro de que deseas eliminar esta receta?')) {
+        recetas.splice(index, 1);
+        guardarDatos();
+        actualizarUI();
+      }
+    }
+    
+    // Mostrar formulario de ingrediente (alacena)
+    function mostrarFormularioIngrediente(ingredienteIndex = null) {
+      const formulario = document.getElementById('formulario-ingrediente-container');
+      const titulo = document.getElementById('titulo-formulario-ingrediente');
+      const form = document.getElementById('ingrediente-form');
+      
+      if (ingredienteIndex !== null) {
+        // Modo edición
+        titulo.textContent = 'Editar Ingrediente';
+        const ingrediente = ingredientesAlacena[ingredienteIndex];
+        
+        document.getElementById('ingrediente-id').value = ingredienteIndex;
+        document.getElementById('nombre-ingrediente').value = ingrediente.nombre;
+        document.getElementById('categoria-ingrediente').value = ingrediente.categoria || 'Otros';
+        document.getElementById('cantidad-ingrediente').value = ingrediente.cantidad;
+        document.getElementById('unidad-ingrediente').value = ingrediente.unidad;
+        document.getElementById('costo-ingrediente').value = ingrediente.costo || 0;
+        document.getElementById('proveedor-ingrediente').value = ingrediente.proveedor || '';
+      } else {
+        // Modo nuevo
+        titulo.textContent = 'Agregar Ingrediente a Alacena';
+        form.reset();
+        document.getElementById('ingrediente-id').value = '';
+      }
+      
+      formulario.style.display = 'flex';
+    }
+    
+    // Ocultar formulario de ingrediente
+    function ocultarFormularioIngrediente() {
+      document.getElementById('formulario-ingrediente-container').style.display = 'none';
+    }
+    
+    // Manejar envío del formulario de ingrediente
+    document.getElementById('ingrediente-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const ingredienteId = document.getElementById('ingrediente-id').value;
+      const nombre = document.getElementById('nombre-ingrediente').value;
+      const categoria = document.getElementById('categoria-ingrediente').value;
+      const cantidad = parseFloat(document.getElementById('cantidad-ingrediente').value);
+      const unidad = document.getElementById('unidad-ingrediente').value;
+      const costo = parseFloat(document.getElementById('costo-ingrediente').value) || 0;
+      const proveedor = document.getElementById('proveedor-ingrediente').value;
+      
+      if (!nombre || isNaN(cantidad) || cantidad <= 0) {
+        alert('Por favor complete todos los campos requeridos');
+        return;
+      }
+      
+      // Crear objeto ingrediente
+      const ingrediente = {
+        nombre,
+        categoria,
+        cantidad,
+        unidad,
+        costo,
+        proveedor
+      };
+      
+      if (ingredienteId === '') {
+        // Nuevo ingrediente
+        ingredientesAlacena.push(ingrediente);
+      } else {
+        // Editar ingrediente existente
+        ingredientesAlacena[parseInt(ingredienteId)] = ingrediente;
+      }
+      
+      guardarDatos();
+      actualizarUI();
+      ocultarFormularioIngrediente();
+    });
+    
+    // Editar ingrediente
+    function editarIngrediente(index) {
+      mostrarFormularioIngrediente(index);
+    }
+    
+    // Eliminar ingrediente
+    function eliminarIngrediente(index) {
+      if (confirm('¿Estás seguro de que deseas eliminar este ingrediente de la alacena?')) {
+        ingredientesAlacena.splice(index, 1);
+        guardarDatos();
+        actualizarUI();
+      }
+    }
+    
+    // Mostrar modal para editar costo
+    function mostrarModalEditarCosto(nombre, costoActual) {
+      document.getElementById('editar-costo-id').value = nombre;
+      document.getElementById('editar-costo-nombre').value = nombre;
+      document.getElementById('editar-costo-valor').value = costoActual;
+      
+      const modal = new bootstrap.Modal(document.getElementById('modalEditarCosto'));
+      modal.show();
+    }
+    
+    // Manejar envío del formulario de edición de costo
+    document.getElementById('form-editar-costo').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const nombre = document.getElementById('editar-costo-id').value;
+      const nuevoCosto = parseFloat(document.getElementById('editar-costo-valor').value);
+      
+      if (isNaN(nuevoCosto) || nuevoCosto < 0) {
+        alert('Por favor ingrese un costo válido');
+        return;
+      }
+      
+      // Actualizar costo en alacena
+      const ingrediente = ingredientesAlacena.find(ing => ing.nombre === nombre);
+      if (ingrediente) {
+        ingrediente.costo = nuevoCosto;
+      } else {
+        // Si no existe en alacena, agregarlo (opcional)
+        ingredientesAlacena.push({
+          nombre: nombre,
+          cantidad: 0,
+          unidad: 'unidad',
+          costo: nuevoCosto,
+          categoria: determinarCategoriaIngrediente(nombre)
+        });
+      }
+      
+      guardarDatos();
+      actualizarUI();
+      
+      // Cerrar modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarCosto'));
+      modal.hide();
+    });
+    
+    // Actualizar costo de ingrediente directamente desde la tabla
+    function actualizarCostoIngrediente(nombre, nuevoCosto) {
+      nuevoCosto = parseFloat(nuevoCosto);
+      if (isNaN(nuevoCosto) || nuevoCosto < 0) return;
+      
+      // Actualizar costo en alacena
+      const ingrediente = ingredientesAlacena.find(ing => ing.nombre === nombre);
+      if (ingrediente) {
+        ingrediente.costo = nuevoCosto;
+      } else {
+        // Si no existe en alacena, agregarlo (opcional)
+        ingredientesAlacena.push({
+          nombre: nombre,
+          cantidad: 0,
+          unidad: 'unidad',
+          costo: nuevoCosto,
+          categoria: determinarCategoriaIngrediente(nombre)
+        });
+      }
+      
+      guardarDatos();
+      actualizarTablaCompras(); // Actualizamos solo lo necesario
+    }
+    
+    // Generar lista de compras (mejorada)
+    function generarListaCompras() {
+      const itemsComprar = calcularItemsComprar();
+      if (itemsComprar.length === 0) {
+        alert('No hay items para comprar según tu planificación actual');
+        return;
+      }
+      
+      // Crear una ventana emergente con la lista formateada
+      const listaWindow = window.open('', '_blank', 'width=600,height=800');
+      listaWindow.document.write(`
+        <html>
+          <head>
+            <title>Lista de Compras</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              h1 { color: #2c3e50; text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th { background-color: #343a40; color: white; padding: 10px; text-align: left; }
+              td { padding: 8px; border-bottom: 1px solid #ddd; }
+              tr:nth-child(even) { background-color: #f2f2f2; }
+              .total { font-weight: bold; text-align: right; margin-top: 20px; font-size: 1.2em; }
+              .prioridad-alta { color: #e74c3c; }
+              .prioridad-media { color: #f39c12; }
+              .prioridad-baja { color: #2ecc71; }
+            </style>
+          </head>
+          <body>
+            <h1>Lista de Compras</h1>
+            <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Ingrediente</th>
+                  <th>Cantidad</th>
+                  <th>Costo Unitario</th>
+                  <th>Subtotal</th>
+                  <th>Prioridad</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsComprar.map(item => `
+                  <tr>
+                    <td>${item.nombre}</td>
+                    <td>${item.comprar} ${item.unidad}</td>
+                    <td>$${(item.costoUnitario || 0).toFixed(2)}</td>
+                    <td>$${(item.comprar * (item.costoUnitario || 0)).toFixed(2)}</td>
+                    <td class="prioridad-${item.prioridad.toLowerCase()}">${item.prioridad}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <div class="total">
+              Total estimado: $${itemsComprar.reduce((sum, item) => sum + (item.comprar * (item.costoUnitario || 0)), 0).toFixed(2)}
+            </div>
+            
+            <button onclick="window.print()" style="margin-top: 20px; padding: 10px 15px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              Imprimir Lista
+            </button>
+          </body>
+        </html>
+      `);
+      listaWindow.document.close();
+    }
+
+    // Función mejorada para generar PDF
+    function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Título del documento
+      doc.setFontSize(20);
+      doc.setTextColor(40);
+      doc.text('Lista de Compras Optimizada', 105, 20, { align: 'center' });
+      
+      // Fecha de generación
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      const hoy = new Date();
+      doc.text(`Generado el: ${hoy.toLocaleDateString()} ${hoy.toLocaleTimeString()}`, 105, 28, { align: 'center' });
+      
+      // Datos para la tabla
+      const itemsComprar = calcularItemsComprar();
+      const tableData = itemsComprar.map(item => [
+        item.nombre,
+        `${item.comprar} ${item.unidad}`,
+        `$${(item.costoUnitario || 0).toFixed(2)}`,
+        `$${(item.comprar * (item.costoUnitario || 0)).toFixed(2)}`,
+        item.prioridad
+      ]);
+      
+      // Agregar tabla
+      doc.autoTable({
+        head: [['Ingrediente', 'Cantidad', 'Costo Unitario', 'Subtotal', 'Prioridad']],
+        body: tableData,
+        startY: 35,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [52, 58, 64],
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 'auto' },
+          3: { cellWidth: 'auto' },
+          4: { cellWidth: 'auto' }
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 3,
+          overflow: 'linebreak'
+        },
+        didDrawPage: function(data) {
+          // Footer en cada página
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text('Despensa Semanal - Sistema BOM/MRP', data.settings.margin.left, doc.internal.pageSize.height - 10);
+        }
+      });
+      
+      // Calcular total
+      const total = itemsComprar.reduce((sum, item) => sum + (item.comprar * (item.costoUnitario || 0)), 0);
+      
+      // Agregar total
+      doc.setFontSize(12);
+      doc.setTextColor(40);
+      doc.text(`Total estimado: $${total.toFixed(2)}`, 105, doc.lastAutoTable.finalY + 15, { align: 'center' });
+      
+      // Guardar PDF
+      doc.save(`Lista_de_Compras_${hoy.toISOString().split('T')[0]}.pdf`);
+    }
+  </script>
+</body>
+</html>

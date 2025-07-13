@@ -1,0 +1,184 @@
+{
+  "recetas": [
+    {
+      "nombre": "Pasta con Tomate",
+      "categoria": "Almuerzo",
+      "dificultad": "Fácil",
+      "tiempo_preparacion": 30,
+      "instrucciones": "1. Cocinar la pasta según instrucciones del paquete. 2. Sofreír el ajo. 3. Añadir tomate picado y cocinar 15 min. 4. Mezclar con la pasta y servir.",
+      "ingredientes": [
+        {
+          "ingrediente": "Pasta",
+          "cantidad": 0.3,
+          "unidad": "kg"
+        },
+        {
+          "ingrediente": "Tomate",
+          "cantidad": 1.5,
+          "unidad": "kg"
+        },
+        {
+          "ingrediente": "Ajo",
+          "cantidad": 2,
+          "unidad": "dientes"
+        }
+      ]
+    },
+    {
+      "nombre": "Pollo al Horno",
+      "categoria": "Almuerzo",
+      "dificultad": "Medio",
+      "tiempo_preparacion": 60,
+      "instrucciones": "1. Adobar el pollo con especias. 2. Colocar en bandeja con vegetales. 3. Hornear a 180°C por 45 min.",
+      "ingredientes": [
+        {
+          "ingrediente": "Pollo",
+          "cantidad": 2,
+          "unidad": "kg"
+        },
+        {
+          "ingrediente": "Papas",
+          "cantidad": 1,
+          "unidad": "kg"
+        },
+        {
+          "ingrediente": "Zanahoria",
+          "cantidad": 0.5,
+          "unidad": "kg"
+        }
+      ]
+    }
+  ],
+  "inventario": [
+    {
+      "ingrediente": "Pasta",
+      "stock_actual": 0.1,
+      "unidad": "kg",
+      "categoria": "Granos",
+      "fecha_caducidad": "2023-12-31"
+    },
+    {
+      "ingrediente": "Tomate",
+      "stock_actual": 0.8,
+      "unidad": "kg",
+      "categoria": "Vegetales",
+      "fecha_caducidad": "2023-11-15"
+    },
+    {
+      "ingrediente": "Ajo",
+      "stock_actual": 5,
+      "unidad": "dientes",
+      "categoria": "Vegetales",
+      "fecha_caducidad": "2023-12-01"
+    },
+    {
+      "ingrediente": "Pollo",
+      "stock_actual": 1,
+      "unidad": "kg",
+      "categoria": "Carnes",
+      "fecha_caducidad": "2023-11-10"
+    }
+  ],
+  "lista_compras": [
+    {
+      "ingrediente": "Pasta",
+      "unidad": "kg",
+      "necesidad_total": 0.3,
+      "stock_actual": 0.1,
+      "comprar": 0.2,
+      "prioridad": "Media",
+      "proveedor": "Supermercado",
+      "precio_estimado": 0.5
+    },
+    {
+      "ingrediente": "Tomate",
+      "unidad": "kg",
+      "necesidad_total": 1.5,
+      "stock_actual": 0.8,
+      "comprar": 0.7,
+      "prioridad": "Alta",
+      "proveedor": "Mercado Local",
+      "precio_estimado": 2.8
+    },
+    {
+      "ingrediente": "Pollo",
+      "unidad": "kg",
+      "necesidad_total": 2,
+      "stock_actual": 1,
+      "comprar": 1,
+      "prioridad": "Alta",
+      "proveedor": "Supermercado",
+      "precio_estimado": 5.0
+    },
+    {
+      "ingrediente": "Papas",
+      "unidad": "kg",
+      "necesidad_total": 1,
+      "stock_actual": 0,
+      "comprar": 1,
+      "prioridad": "Alta",
+      "proveedor": "Mercado Local",
+      "precio_estimado": 1.5
+    },
+    {
+      "ingrediente": "Zanahoria",
+      "unidad": "kg",
+      "necesidad_total": 0.5,
+      "stock_actual": 0,
+      "comprar": 0.5,
+      "prioridad": "Media",
+      "proveedor": "Mercado Local",
+      "precio_estimado": 1.0
+    }
+  ],
+  "calendario_comidas": [
+    {
+      "dia": "Lunes",
+      "comida": "Almuerzo",
+      "receta": "Pasta con Tomate"
+    },
+    {
+      "dia": "Martes",
+      "comida": "Almuerzo",
+      "receta": "Pollo al Horno"
+    }
+  ],
+  "ingredientes_base": [
+    {
+      "nombre": "Pasta",
+      "unidad": "kg",
+      "categoria": "Granos",
+      "precio": 2.5
+    },
+    {
+      "nombre": "Tomate",
+      "unidad": "kg",
+      "categoria": "Vegetales",
+      "precio": 4.0
+    },
+    {
+      "nombre": "Ajo",
+      "unidad": "dientes",
+      "categoria": "Vegetales",
+      "precio": 0.1
+    },
+    {
+      "nombre": "Pollo",
+      "unidad": "kg",
+      "categoria": "Carnes",
+      "precio": 5.0
+    },
+    {
+      "nombre": "Papas",
+      "unidad": "kg",
+      "categoria": "Vegetales",
+      "precio": 1.5
+    },
+    {
+      "nombre": "Zanahoria",
+      "unidad": "kg",
+      "categoria": "Vegetales",
+      "precio": 2.0
+    }
+  ]
+}
